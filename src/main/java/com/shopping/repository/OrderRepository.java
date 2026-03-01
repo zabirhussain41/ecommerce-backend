@@ -1,23 +1,7 @@
-package com.shopping.dao;
+package com.shopping.repository;
 
-import org.hibernate.SessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Repository;
-
+import org.springframework.data.jpa.repository.JpaRepository;
 import com.shopping.model.Order;
-import com.shopping.model.OrderItem;
 
-@Repository
-public class OrderDAO {
-
-    @Autowired
-    private SessionFactory sessionFactory;
-
-    public void saveOrder(Order order) {
-        sessionFactory.getCurrentSession().persist(order);
-    }
-
-    public void saveOrderItem(OrderItem item) {
-        sessionFactory.getCurrentSession().persist(item);
-    }
+public interface OrderRepository extends JpaRepository<Order, Integer> {
 }

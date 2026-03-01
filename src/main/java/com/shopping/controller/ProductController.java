@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.shopping.model.Product;
 import com.shopping.service.ProductService;
 
@@ -26,11 +27,11 @@ public class ProductController {
 
     @GetMapping
     public List<Product> getAllProducts() {
-        return productService.getProducts();
+        return productService.getAll();
     }
     @GetMapping("/{id}")
     public Product getProduct(@PathVariable int id) {
-        return productService.getProductById(id);
+        return productService.getById(id);
     }
 
 }

@@ -1,91 +1,78 @@
 package com.shopping.service;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import com.shopping.model.*;
+import com.shopping.repository.*;
 
-import com.shopping.dao.CartDAO;
-import com.shopping.dao.OrderDAO;
-import com.shopping.model.Cart;
-import com.shopping.model.CartItem;
-import com.shopping.model.Order;
-import com.shopping.model.OrderItem;
-import com.shopping.model.Product;
-import org.hibernate.SessionFactory;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
-@Transactional
 public class OrderService {
 
     @Autowired
-    private CartDAO cartDAO;
+    private CartRepository cartRepo;
 
     @Autowired
-    private OrderDAO orderDAO;
-    
+    private CartItemRepository cartItemRepo;
+
     @Autowired
-    private SessionFactory sessionFactory;
+    private OrderRepository orderRepo;
 
-    public String placeOrder(int userId) {
+    @Autowired
+    private OrderItemRepository orderItemRepo;
 
-        Cart cart = cartDAO.getCartByUserId(userId);//get cart
-        
-        List<CartItem> cartItems = cartDAO.getItems(cart.getId());//get cart items
+    @Autowired
+    private ProductRepository productRepo;
+
+    public String placeOrder(Integer userId) {
+
+        Cart cart = cartRepo.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        List<CartItem> cartItems = cartItemRepo.findByCartId(cart.getId());
 
         if (cartItems.isEmpty()) {
             return "Cart is empty";
         }
 
-        Order order = new Order();//create order
+        Order order = new Order();
         order.setUserId(userId);
 
         double total = 0;
+        List<OrderItem> orderItems = new ArrayList<>();
 
-        for (CartItem ci : cartItems) {    //calculate total + validate products
-        	
-        	Product product =ci.getProduct();
-        	
-        	if (product == null) {
-                throw new RuntimeException("CartItem has no product!");
+        for (CartItem ci : cartItems) {
+
+            Product product = ci.getProduct();
+
+            if (product.getStock() < ci.getQuantity()) {
+                throw new RuntimeException("Not enough stock");
             }
-        	 if (product.getStock() < ci.getQuantity()) {
-                 throw new RuntimeException("Insufficient stock for product: " + product.getName());
-             }
-            total += ci.getProduct().getPrice()* ci.getQuantity();
-        }
 
-        order.setTotalAmount(total);
-        orderDAO.saveOrder(order);
-        
-      //create orderr items+ update stocks
-        for (CartItem ci : cartItems) {       
-           
-        	Product product =ci.getProduct();
-        	
-        	//update stocks
-        	 product.setStock(product.getStock() - ci.getQuantity());
-        	 total += product.getPrice()* ci.getQuantity();
-        	 
-             sessionFactory.getCurrentSession().update(product);
-             
-        	OrderItem oi = new OrderItem();
+            product.setStock(product.getStock() - ci.getQuantity());
+            productRepo.save(product);
+
+            total += product.getPrice() * ci.getQuantity();
+
+            OrderItem oi = new OrderItem();
             oi.setOrder(order);
             oi.setProduct(product);
             oi.setQuantity(ci.getQuantity());
             oi.setPrice(product.getPrice());
 
-            orderDAO.saveOrderItem(oi);
+            orderItems.add(oi);
         }
-        //clear cart after order
-        sessionFactory.getCurrentSession()
-        .createQuery("delete from CartItem where cart.id = :cid")
-        .setParameter("cid", cart.getId())
-        .executeUpdate();
+
+        order.setTotalAmount(total);
+        order.setItems(orderItems);
+
+        orderRepo.save(order);
+
+        cartItemRepo.deleteAll(cartItems);
 
         return "Order placed successfully";
     }
 }
-

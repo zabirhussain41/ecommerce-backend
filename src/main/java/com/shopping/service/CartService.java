@@ -2,29 +2,48 @@ package com.shopping.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import com.shopping.dao.CartDAO;
-import com.shopping.model.Cart;
-import com.shopping.model.CartItem;
+import com.shopping.model.*;
+import com.shopping.repository.*;
+
 import java.util.List;
 
 @Service
-@Transactional
 public class CartService {
 
     @Autowired
-    private CartDAO cartDAO;
+    private CartRepository cartRepo;
 
+    @Autowired
+    private CartItemRepository cartItemRepo;
 
-    public void addToCart(int userId, int productId, int qty) {
-    	
-        Cart cart = cartDAO.getCartByUserId(userId);
-        cartDAO.addItem(cart, productId, qty);
+    @Autowired
+    private ProductRepository productRepo;
+
+    public void addToCart(Integer userId, Integer productId, int qty) {
+
+        Cart cart = cartRepo.findByUserId(userId)
+                .orElseGet(() -> {
+                    Cart newCart = new Cart();
+                    newCart.setUserId(userId);
+                    return cartRepo.save(newCart);
+                });
+
+        Product product = productRepo.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        CartItem item = new CartItem();
+        item.setCart(cart);
+        item.setProduct(product);
+        item.setQuantity(qty);
+
+        cartItemRepo.save(item);
     }
 
-    public List<CartItem> viewCart(int userId) {
-        Cart cart = cartDAO.getCartByUserId(userId);
-        return cartDAO.getItems(cart.getId());
+    public List<CartItem> viewCart(Integer userId) {
+        Cart cart = cartRepo.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        return cartItemRepo.findByCartId(cart.getId());
     }
 }

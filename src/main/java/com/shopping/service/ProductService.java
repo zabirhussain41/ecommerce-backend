@@ -1,30 +1,41 @@
 package com.shopping.service;
 
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import com.shopping.dao.ProductDAO;
+
 import com.shopping.model.Product;
+import com.shopping.repository.ProductRepository;
+
+import java.util.List;
 
 @Service
-@Transactional
 public class ProductService {
 
     @Autowired
-    private ProductDAO productDAO;
+    private ProductRepository repository;
 
-    public void addProduct(Product product) {
-        productDAO.save(product);
+    public Product addProduct(Product product) {
+        return repository.save(product);
     }
 
-    public List<Product> getProducts() {
-        return productDAO.getAll();
+    public List<Product> getAll() {
+        return repository.findAll();
     }
-    public Product getProductById(int id) {
-        return productDAO.getById(id);
+
+    public Product getById(int id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
     }
-    public void updateProduct(Product product) {
-        productDAO.update(product);
+
+    public Product updateProduct(int id, Product updated) {
+        Product product = getById(id);
+        product.setName(updated.getName());
+        product.setPrice(updated.getPrice());
+        product.setStock(updated.getStock());
+        return repository.save(product);
+    }
+
+    public void deleteProduct(int id) {
+        repository.deleteById(id);
     }
 }
