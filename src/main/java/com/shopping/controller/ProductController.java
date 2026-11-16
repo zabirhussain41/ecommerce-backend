@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.math.BigDecimal;
 import java.util.Map;
 
 @RestController
@@ -21,16 +21,23 @@ public class ProductController {
     public Page<Product> getAll(
             @RequestParam(defaultValue = "0")  int page,
             @RequestParam(defaultValue = "12") int size,
-            @RequestParam(required = false)    Integer categoryId) {
-        return productService.getAll(page, size, categoryId);
+            @RequestParam(required = false)    Integer categoryId,
+            @RequestParam(required = false)    BigDecimal minPrice,
+            @RequestParam(required = false)    BigDecimal maxPrice,
+            @RequestParam(required = false)    String sort) {
+        return productService.getAll(page, size, categoryId, minPrice, maxPrice, sort);
     }
 
     @GetMapping("/search")
     public Page<Product> search(
             @RequestParam String q,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
-        return productService.search(q, page, size);
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(required = false)    Integer categoryId,
+            @RequestParam(required = false)    BigDecimal minPrice,
+            @RequestParam(required = false)    BigDecimal maxPrice,
+            @RequestParam(required = false)    String sort) {
+        return productService.search(q, page, size, categoryId, minPrice, maxPrice, sort);
     }
 
     @GetMapping("/{id}")
@@ -43,8 +50,10 @@ public class ProductController {
     public ResponseEntity<?> add(@RequestBody Product product) {
         if (product.getName() == null || product.getName().isBlank())
             return ResponseEntity.badRequest().body(Map.of("error", "Product name required"));
-        if (product.getPrice() == null)
-            return ResponseEntity.badRequest().body(Map.of("error", "Price required"));
+        if (product.getPrice() == null || product.getPrice().signum() < 0)
+            return ResponseEntity.badRequest().body(Map.of("error", "Valid price required"));
+        if (product.getStock() == null || product.getStock() < 0)
+            return ResponseEntity.badRequest().body(Map.of("error", "Valid stock required"));
         return ResponseEntity.ok(productService.addProduct(product));
     }
 

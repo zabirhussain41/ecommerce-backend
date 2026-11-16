@@ -1,6 +1,7 @@
 package com.shopping.controller;
 
-import com.shopping.model.*;
+import com.shopping.dto.CartItemResponse;
+import com.shopping.model.User;
 import com.shopping.repository.UserRepository;
 import com.shopping.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +36,16 @@ public class CartController {
     }
 
     @GetMapping
-    public List<CartItem> viewCart(@AuthenticationPrincipal UserDetails userDetails) {
+    public List<CartItemResponse> viewCart(@AuthenticationPrincipal UserDetails userDetails) {
         return cartService.viewCart(getUserId(userDetails));
+    }
+
+    @PutMapping("/item/{itemId}")
+    public CartItemResponse updateItem(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Integer itemId,
+            @RequestParam int quantity) {
+        return cartService.updateQuantity(getUserId(userDetails), itemId, quantity);
     }
 
     @DeleteMapping("/item/{itemId}")

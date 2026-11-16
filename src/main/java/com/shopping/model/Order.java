@@ -27,6 +27,9 @@ public class Order {
 
     private String paymentMethod;
 
+    @Embedded
+    private ShippingAddress shippingAddress;
+
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt;
@@ -45,6 +48,8 @@ public class Order {
     public void setItems(List<OrderItem> items) { this.items = items; }
     public String getPaymentMethod() { return paymentMethod; }
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+    public ShippingAddress getShippingAddress() { return shippingAddress; }
+    public void setShippingAddress(ShippingAddress shippingAddress) { this.shippingAddress = shippingAddress; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }

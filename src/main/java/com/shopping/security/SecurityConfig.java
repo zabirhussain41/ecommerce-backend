@@ -1,5 +1,6 @@
 package com.shopping.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.*;
@@ -12,12 +13,16 @@ import org.springframework.security.crypto.bcrypt.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.*;
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    @Value("${app.cors.allowed-origins:http://localhost:5173}")
+    private String allowedOrigins;
 
     @Bean
     public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
@@ -33,12 +38,19 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
+                // /api/admin/** requires authentication here; ROLE_ADMIN is enforced
+                // per-controller via @PreAuthorize (returns proper 403 for wrong role)
                 .requestMatchers("/test").permitAll()
                 .anyRequest().authenticated())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(e -> e.authenticationEntryPoint((req, res, ex) -> {
+                res.setStatus(401);
+                res.setContentType("application/json");
+                res.getWriter().write("{\"error\":\"Authentication required\"}");
+            }))
             .addFilterBefore(jwtFilter,
                 org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
         return http.build();
@@ -47,7 +59,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
