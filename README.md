@@ -61,6 +61,16 @@ mvn spring-boot:run        # or: mvn clean package && java -jar target/shopping-
 API runs on `http://localhost:8080`. If `ADMIN_PASSWORD` is unset, a random
 password is generated and printed once in the logs — set it for real use.
 
+### Demo catalog seeding
+
+```bash
+node scripts/seed-catalog.mjs http://localhost:8080 admin <admin-password>
+```
+
+Creates ~10 categories and ~35 products with generated SVG images uploaded
+through the real image API (`POST /api/products/{id}/images`). Idempotent —
+skips names that already exist.
+
 ### Backend tests
 
 ```bash
@@ -101,4 +111,7 @@ npm run preview            # preview the production build
 - Order totals = product subtotal; shipping is display-only on the storefront (not charged server-side).
 - Admin "customer" column in order lists shows user ID (no username join in order DTOs).
 - `ddl-auto=update` is used for dev convenience; use Flyway/Liquibase migrations for production.
+- Product images are stored on disk under `uploads/` (configurable via `APP_UPLOAD_DIR`,
+  default `./uploads`) and served at `/uploads/**`. Max 5 MB, image types only.
+  For production use object storage (S3) instead of local disk.
 - The repo's `target/` directory contains committed build artifacts (pre-existing); `.gitignore` now excludes it going forward.

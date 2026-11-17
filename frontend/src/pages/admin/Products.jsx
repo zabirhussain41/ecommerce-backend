@@ -3,6 +3,7 @@ import { Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { adminService } from '../../services/adminService'
 import { categoryService } from '../../services/catalogService'
 import DataTable from '../../components/DataTable'
+import ProductImageManager from '../../components/admin/ProductImageManager'
 import { Badge, Button, Input, Select, Modal, Field, Textarea, Pagination, EmptyState, ErrorState, ConfirmDialog, Alert } from '../../components/ui'
 import { formatPrice } from '../../utils/format'
 import { Package } from 'lucide-react'
@@ -163,10 +164,13 @@ function ProductFormModal({ modal, categories, onClose, onSaved, onError }) {
             <Textarea value={form.description} onChange={set('description')} className="min-h-[100px]" />
           </Field>
           {isEdit && (
-            <label className="flex items-center gap-2 text-sm text-neutral-700 sm:col-span-2">
-              <input type="checkbox" checked={form.active} onChange={e => setForm({ ...form, active: e.target.checked })} className="rounded border-neutral-300" />
-              Active (visible in store)
-            </label>
+            <>
+              <label className="flex items-center gap-2 text-sm text-neutral-700 sm:col-span-2">
+                <input type="checkbox" checked={form.active} onChange={e => setForm({ ...form, active: e.target.checked })} className="rounded border-neutral-300" />
+                Active (visible in store)
+              </label>
+              <ProductImageManager productId={p.id} onError={onError} />
+            </>
           )}
         </div>
         <div className="mt-4 flex justify-end gap-2">

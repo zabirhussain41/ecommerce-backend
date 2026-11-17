@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Truck, ShieldCheck, RotateCcw } from 'lucide-react'
 import { productService, categoryService } from '../services/catalogService'
+import { resolveImageUrl } from '../utils/images'
 import ProductGrid, { ProductGridSkeleton } from '../components/ProductGrid'
 import { Button } from '../components/ui'
 
@@ -9,6 +10,7 @@ export default function Home() {
   const [categories, setCategories] = useState([])
   const [featured, setFeatured] = useState([])
   const [newest, setNewest] = useState([])
+  const [onSale, setOnSale] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -16,12 +18,15 @@ export default function Home() {
     Promise.all([
       categoryService.list().catch(() => ({ data: [] })),
       productService.list({ size: 8, sort: 'newest' }).catch(() => ({ data: { content: [] } })),
-      productService.list({ size: 8 }).catch(() => ({ data: { content: [] } })),
-    ]).then(([cats, feat, nw]) => {
+      productService.list({ size: 20 }).catch(() => ({ data: { content: [] } })),
+    ]).then(([cats, feat, all]) => {
       if (cancelled) return
+      const allProducts = all.data?.content || []
       setCategories(cats.data || [])
       setFeatured(feat.data?.content || [])
-      setNewest(nw.data?.content || [])
+      setNewest(allProducts.slice(0, 8))
+      // "On sale" is derived from real data: products with originalPrice > price
+      setOnSale(allProducts.filter(p => p.originalPrice > p.price).slice(0, 8))
       setLoading(false)
     })
     return () => { cancelled = true }
@@ -54,8 +59,8 @@ export default function Home() {
             {categories.map(c => (
               <Link key={c.id} to={`/products?categoryId=${c.id}`}
                 className="flex flex-col items-center rounded-xl border border-neutral-200 bg-white p-5 text-center transition-shadow hover:shadow-md">
-                {c.imageUrl
-                  ? <img src={c.imageUrl} alt={c.name} className="mb-3 h-14 w-14 rounded-full object-cover" />
+                {resolveImageUrl(c.imageUrl)
+                  ? <img src={resolveImageUrl(c.imageUrl)} alt={c.name} className="mb-3 h-14 w-14 rounded-full object-cover" loading="lazy" />
                   : <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-xl font-bold text-brand-600">{c.name[0]}</div>}
                 <span className="text-sm font-medium text-neutral-800">{c.name}</span>
               </Link>
@@ -74,6 +79,17 @@ export default function Home() {
           {loading ? <ProductGridSkeleton count={8} /> : <ProductGrid products={featured} />}
         </div>
       </section>
+
+      {/* On sale */}
+      {!loading && onSale.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-12">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-neutral-900">On sale</h2>
+            <Link to="/products" className="text-sm font-medium text-brand-600 hover:text-brand-700">View all →</Link>
+          </div>
+          <div className="mt-6"><ProductGrid products={onSale} /></div>
+        </section>
+      )}
 
       {/* Newest */}
       {!loading && newest.length > 0 && newest[0]?.id !== featured[0]?.id && (

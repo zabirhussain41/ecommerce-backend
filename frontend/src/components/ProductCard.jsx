@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import { formatPrice } from '../utils/format'
+import { productImage } from '../utils/images'
+import { Package } from 'lucide-react'
 
 export default function ProductCard({ product }) {
   const outOfStock = (product.stock ?? 0) <= 0
@@ -13,11 +15,11 @@ export default function ProductCard({ product }) {
       className="group flex flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white transition-shadow hover:shadow-md"
     >
       <div className="relative aspect-square bg-neutral-100 overflow-hidden">
-        {product.imageUrl ? (
-          <img src={product.imageUrl} alt={product.name}
+        {productImage(product) ? (
+          <img src={productImage(product)} alt={product.name}
             className="h-full w-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-neutral-300 text-sm">No image</div>
+          <div className="flex h-full w-full items-center justify-center text-neutral-300"><Package size={40} /></div>
         )}
         {product.badge && (
           <span className="absolute left-2 top-2 rounded-full bg-brand-600 px-2 py-0.5 text-xs font-medium text-white">

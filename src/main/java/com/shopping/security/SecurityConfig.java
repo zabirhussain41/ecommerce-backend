@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
                 // /api/admin/** requires authentication here; ROLE_ADMIN is enforced
                 // per-controller via @PreAuthorize (returns proper 403 for wrong role)
+                .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/test").permitAll()
                 .anyRequest().authenticated())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

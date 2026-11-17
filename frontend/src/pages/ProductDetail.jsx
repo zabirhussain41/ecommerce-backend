@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { Minus, Plus, ShoppingCart, Zap, Check, Package } from 'lucide-react'
+import { Minus, Plus, ShoppingCart, Zap, Check } from 'lucide-react'
 import { productService } from '../services/catalogService'
+import { productImages } from '../utils/images'
+import ProductGallery from '../components/ProductGallery'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import ProductGrid from '../components/ProductGrid'
@@ -88,11 +90,7 @@ export default function ProductDetail() {
       </nav>
 
       <div className="grid gap-10 md:grid-cols-2">
-        <div className="aspect-square overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100">
-          {product.imageUrl
-            ? <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
-            : <div className="flex h-full items-center justify-center text-neutral-300"><Package size={64} /></div>}
-        </div>
+        <ProductGallery images={productImages(product)} name={product.name} />
 
         <div>
           <p className="text-sm text-neutral-500">{product.category?.name || 'Uncategorized'}</p>

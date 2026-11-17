@@ -22,6 +22,23 @@ export const adminService = {
   updateProduct: (id, data) => api.put(`/api/products/${id}`, data),
   deleteProduct: (id) => api.delete(`/api/products/${id}`),
 
+  // product images (admin)
+  product: (id) => api.get(`/api/products/${id}`),
+  uploadProductImage: (productId, file, primary = false) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('primary', primary)
+    return api.post(`/api/products/${productId}/images`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+  deleteProductImage: (productId, imageId) =>
+    api.delete(`/api/products/${productId}/images/${imageId}`),
+  setPrimaryImage: (productId, imageId) =>
+    api.put(`/api/products/${productId}/images/${imageId}/primary`),
+  reorderImages: (productId, orderedIds) =>
+    api.put(`/api/products/${productId}/images/order`, orderedIds),
+
   // categories
   categories: () => api.get('/api/admin/categories'),
   createCategory: (data) => api.post('/api/admin/categories', data),
